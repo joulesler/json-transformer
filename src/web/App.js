@@ -6,7 +6,6 @@ import ObjectManager from './components/ObjectManager';
 import SourceField from './components/SourceField';
 import TargetField from './components/TargetField';
 import TransformationZone from './components/TransformationZone';
-import { Container, Grid, Paper, Typography } from '@mui/material';
 
 const App = () => {
   const [inputObject, setInputObject] = useState({});
@@ -75,75 +74,52 @@ const App = () => {
 
   return (
     <DndProvider backend={HTML5Backend}>
-      <Container>
-        <Typography variant="h4" gutterBottom>
-          JSON Mapping Editor
-        </Typography>
+      <div className="container mx-auto p-6">
+        <h1 className="text-4xl font-bold text-center mb-6">JSON Mapping Editor</h1>
 
         {/* Object Manager Section */}
-        <Grid container spacing={3}>
-          <Grid item xs={12}>
-            <Paper elevation={3} style={{ padding: '20px' }}>
-              <Typography variant="h5" gutterBottom>
-                Input Object
-              </Typography>
-              <ObjectManager onObjectChange={setInputObject} />
-            </Paper>
-          </Grid>
-        </Grid>
+        <div className="mb-6">
+          <div className="bg-white p-6 rounded-lg shadow-md">
+            <h2 className="text-2xl font-semibold mb-4">Input Object</h2>
+            <ObjectManager onObjectChange={setInputObject} />
+          </div>
+        </div>
 
         {/* Main Transformation Grid */}
-        <Grid container spacing={3} style={{ display: 'flex', marginTop: '20px' }}>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Source Fields */}
-          <Grid item xs={12} md={4} style={{ display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
-            <Paper elevation={3} style={{ padding: '20px', height: '100%' }}>
-              <Typography variant="h5" gutterBottom>
-                Source Fields
-              </Typography>
-              {Object.keys(inputObject).map((key) => (
-                <SourceField key={key} name={key} />
-              ))}
-            </Paper>
-          </Grid>
+          <div className="bg-white p-6 rounded-lg shadow-md">
+            <h2 className="text-2xl font-semibold mb-4">Source Fields</h2>
+            {Object.keys(inputObject).map((key) => (
+              <SourceField key={key} name={key} />
+            ))}
+          </div>
 
           {/* Transformation Zone */}
-          <Grid item xs={12} md={4} style={{ display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
-            <Paper elevation={3} style={{ padding: '20px', height: '100%' }}>
-              <Typography variant="h5" gutterBottom>
-                Data Transformations
-              </Typography>
-              <TransformationZone
-                inputObject={inputObject}
-                mappings={mappings}
-                onTransformationsChange={handleTransformationsChange}
-              />
-            </Paper>
-          </Grid>
+          <div className="bg-white p-6 rounded-lg shadow-md">
+            <h2 className="text-2xl font-semibold mb-4">Data Transformations</h2>
+            <TransformationZone
+              inputObject={inputObject}
+              mappings={mappings}
+              onTransformationsChange={handleTransformationsChange}
+            />
+          </div>
 
           {/* Target Fields */}
-          <Grid item xs={12} md={4} style={{ display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
-            <Paper elevation={3} style={{ padding: '20px', height: '100%' }}>
-              <Typography variant="h5" gutterBottom>
-                Target Fields
-              </Typography>
-              <TargetField
-                label="Mapping Zone"
-                onMappingChange={handleMappingChange}
-              />
-            </Paper>
-          </Grid>
-        </Grid>
+          <div className="bg-white p-6 rounded-lg shadow-md">
+            <h2 className="text-2xl font-semibold mb-4">Target Fields</h2>
+            <TargetField onMappingChange={handleMappingChange} />
+          </div>
+        </div>
 
         {/* Output Object Section */}
-        <Grid container spacing={3} style={{ marginTop: '20px' }}>
-          <Grid item xs={12}>
-            <Paper elevation={3} style={{ padding: '20px' }}>
-              <Typography variant="h6">Output Object:</Typography>
-              <pre>{JSON.stringify(outputObject, null, 2)}</pre>
-            </Paper>
-          </Grid>
-        </Grid>
-      </Container>
+        <div className="mt-6 bg-white p-6 rounded-lg shadow-md">
+          <h2 className="text-xl font-semibold mb-4">Output Object:</h2>
+          <pre className="bg-gray-100 p-4 rounded-lg overflow-x-auto">
+            {JSON.stringify(outputObject, null, 2)}
+          </pre>
+        </div>
+      </div>
     </DndProvider>
   );
 };

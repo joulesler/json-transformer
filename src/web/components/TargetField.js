@@ -1,60 +1,72 @@
 import React, { useState } from 'react';
 import { useDrop } from 'react-dnd';
 import { ItemTypes } from './ItemTypes';
+import Modal from './Modal';
 
-const TargetField = ({ label, onMappingChange }) => {
-  const [mappedFields, setMappedFields] = useState({});
+const TargetField = ({ onMappingChange }) => {
+    const [mappedFields, setMappedFields] = useState({});
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [currentItem, setCurrentItem] = useState(null);
 
-  const [{ isOver }, drop] = useDrop(() => ({
-    accept: ItemTypes.FIELD,
-    drop: (item) => handleDrop(item),
-    collect: (monitor) => ({
-      isOver: !!monitor.isOver(),
-    }),
-  }));
+    const [{ isOver }, drop] = useDrop(() => ({
+        accept: ItemTypes.FIELD,
+        drop: (item) => handleDrop(item),
+        collect: (monitor) => ({
+            isOver: !!monitor.isOver(),
+        }),
+    }));
 
-  const handleDrop = (item) => {
-    const newKey = prompt(`Map "${item.name}" to output key:`, item.name);
-    if (newKey) {
-      // Update both the state and call onMappingChange in the correct order
-      setMappedFields((prev) => {
-        const updatedMappings = { ...prev, [item.name]: newKey };
-        onMappingChange(updatedMappings); // Call with updated mappings
-        return updatedMappings;
-      });
-    }
-  };
+    const handleDrop = (item) => {
+        setCurrentItem(item);
+        setIsModalOpen(true);
+    };
 
-  const handleRemoveMapping = (key) => {
-    setMappedFields((prev) => {
-      const updatedMappings = { ...prev };
-      delete updatedMappings[key];
-      onMappingChange(updatedMappings); // Call with updated mappings
-      return updatedMappings;
-    });
-  };
+    const handleModalSubmit = (newKey) => {
+        if (newKey && currentItem) {
+            setMappedFields((prev) => {
+                const updatedMappings = { ...prev, [currentItem.name]: newKey };
+                onMappingChange(updatedMappings); // Call with updated mappings
+                return updatedMappings;
+            });
+        }
+        setIsModalOpen(false); // Close modal after submit
+    };
 
-  return (
-    <div
-      ref={drop}
-      style={{
-        padding: '5px',
-        border: '2px dashed #aaa',
-        backgroundColor: isOver ? '#f0f0f0' : '#fff',
-        minHeight: '150px',
-      }}
-    >
-      <h4>{label}</h4>
-      {Object.entries(mappedFields).map(([sourceKey, targetKey]) => (
-        <div key={sourceKey} style={{ marginBottom: '10px' }}>
-          {sourceKey} ➔ {targetKey}
-          <button onClick={() => handleRemoveMapping(sourceKey)} style={{ marginLeft: '10px' }}>
-            Remove
-          </button>
+    const handleRemoveMapping = (key) => {
+        setMappedFields((prev) => {
+            const updatedMappings = { ...prev };
+            delete updatedMappings[key];
+            onMappingChange(updatedMappings); // Call with updated mappings
+            return updatedMappings;
+        });
+    };
+
+    return (
+        <div
+            ref={drop}
+            className={`p-4 border-2 border-dashed ${isOver ? 'bg-gray-100' : 'bg-white'} min-h-40`}
+        >
+            {Object.entries(mappedFields).map(([sourceKey, targetKey]) => (
+                <div key={sourceKey} className="mb-2 flex items-center">
+                    <span className="mr-2">{sourceKey} ➔ {targetKey}</span>
+                    <button
+                        onClick={() => handleRemoveMapping(sourceKey)}
+                        className="ml-2 px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600"
+                    >
+                        Remove
+                    </button>
+                </div>
+            ))}
+            {isModalOpen && (
+                <Modal
+                    isOpen={isModalOpen}
+                    onClose={() => setIsModalOpen(false)}
+                    onSubmit={handleModalSubmit}
+                    defaultValue={currentItem ? currentItem.name : ''}
+                />
+            )}
         </div>
-      ))}
-    </div>
-  );
+    );
 };
 
 export default TargetField;
