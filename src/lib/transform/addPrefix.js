@@ -1,0 +1,1 @@
+export const addPrefix = (text, prefix = 'Prefix-') => `${prefix}${text}`;
