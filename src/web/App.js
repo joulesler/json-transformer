@@ -2,10 +2,16 @@ import React, { useState, useEffect } from 'react';
 import lodash from 'lodash';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
-import ObjectManager from './components/ObjectManager';
-import SourceField from './components/SourceField';
-import TargetField from './components/TargetField';
-import TransformationZone from './components/TransformationZone';
+import ObjectManager from './transform/ObjectManager';
+import SourceField from './transform/SourceField';
+import TargetField from './transform/TargetField';
+import TransformationZone from './transform/TransformationZone';
+import WorkflowChaining from './workflow/Workflow';
+
+const TABS = {
+  MAPPING: 'mapping',
+  WORKFLOW: 'workflow',
+};
 
 const App = () => {
   const [inputObject, setInputObject] = useState({});
@@ -14,6 +20,7 @@ const App = () => {
   const [configurationName, setConfigurationName] = useState('');
   const [fieldTransformations, setFieldTransformations] = useState({});
   const [transformationOptions, setTransformationOptions] = useState({});
+  const [activeTab, setActiveTab] = useState(TABS.MAPPING);
 
   const reRenderOutputObject = () => {
     const transformedObject = lodash.cloneDeep(inputObject);
@@ -103,85 +110,110 @@ const App = () => {
   };
 
   return (
-    <DndProvider backend={HTML5Backend}>
-      <div className="container mx-auto p-6">
-        <h1 className="text-4xl font-bold text-center mb-6">JSON Mapping Editor</h1>
-        {/* Object Manager Section */}
-        <div className="mb-6">
-          <div className="bg-white p-6 rounded-lg shadow-md">
-            <h2 className="text-2xl font-semibold mb-4">Input Object</h2>
-            <ObjectManager onObjectChange={setInputObject} />
+    <div>
+      <div className="flex justify-center mb-4 text-2xl font-semibold">
+        <button
+          className={`px-4 py-2 cursor-pointer bg-gray-200 border border-gray-300 rounded-t-lg mr-2 ${activeTab === TABS.MAPPING ? 'bg-white border-b-0' : 'opacity-60'}`}
+          onClick={() => setActiveTab(TABS.MAPPING)}
+        >
+          JSON Mapping Editor
+        </button>
+        <button
+          className={`px-4 py-2 cursor-pointer bg-gray-200 border border-gray-300 rounded-t-lg ${activeTab === TABS.WORKFLOW ? 'bg-white border-b-0' : 'opacity-60'}`}
+          onClick={() => setActiveTab(TABS.WORKFLOW)}
+        >
+          Workflow Editor
+        </button>
+      </div>
+      <div className={`${activeTab === TABS.MAPPING ? 'block' : 'hidden'} opacity-90 transition-opacity duration-300`}>
+      <DndProvider backend={HTML5Backend}>
+        <div className="container mx-auto p-6">
+          {/* <h1 className="text-4xl font-bold text-center mb-6">JSON Mapping Editor</h1> */}
+          {/* Object Manager Section */}
+          <div className="mb-6">
+            <div className="bg-white p-6 rounded-lg shadow-md">
+              <h2 className="text-2xl font-semibold mb-4">Input Object</h2>
+              <ObjectManager onObjectChange={setInputObject} />
+            </div>
           </div>
-        </div>
-        {/* Configuration List */}
-        <div className="bg-white p-6 rounded-lg shadow-md mb-6">
-          <h2 className="text-2xl font-semibold mb-4">Load Saved Configurations</h2>
-          <ul className='flex flew-col mr-3'>
-            {Object.keys(JSON.parse(localStorage.getItem('mappingConfiguration') || '{}')).map((configName) => (
-              <li key={configName} className="mr-2">
-                <button
-                  className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-                  onClick={() => {
-                    const { mappings: savedMappings, fieldTransformations: savedTransformations } = JSON.parse(
-                      localStorage.getItem('mappingConfiguration')
-                    )[configName];
-                    setConfigurationName(configName);
-                    setMappings(savedMappings);
-                    setFieldTransformations(savedTransformations);
-                  }}
-                >
-                  {configName}
-                </button>
-              </li>
-            ))}
-          </ul>
-        </div>
-        {/* Main Transformation Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Source Fields */}
-          <div className="bg-white p-6 rounded-lg shadow-md">
-            <h2 className="text-2xl font-semibold mb-4">Source Fields</h2>
-            {Object.keys(inputObject).map((key) => (
-              <SourceField key={key} name={key} />
-            ))}
+          {/* Configuration List */}
+          <div className="bg-white p-6 rounded-lg shadow-md mb-6">
+            <h2 className="text-2xl font-semibold mb-4">Load Saved Configurations</h2>
+            <ul className='flex flew-col mr-3'>
+              {Object.keys(JSON.parse(localStorage.getItem('mappingConfiguration') || '{}')).map((configName) => (
+                <li key={configName} className="mr-2">
+                  <button
+                    className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                    onClick={() => {
+                      const { mappings: savedMappings, fieldTransformations: savedTransformations } = JSON.parse(
+                        localStorage.getItem('mappingConfiguration')
+                      )[configName];
+                      setConfigurationName(configName);
+                      setMappings(savedMappings);
+                      setFieldTransformations(savedTransformations);
+                    }}
+                  >
+                    {configName}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+          {/* Main Transformation Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Source Fields */}
+            <div className="bg-white p-6 rounded-lg shadow-md">
+              <h2 className="text-2xl font-semibold mb-4">Source Fields</h2>
+              {Object.keys(inputObject).map((key) => (
+                <SourceField key={key} name={key} />
+              ))}
+            </div>
+
+            {/* Transformation Zone */}
+            <div className="bg-white p-6 rounded-lg shadow-md">
+              <h2 className="text-2xl font-semibold mb-4">Data Transformations</h2>
+              <TransformationZone
+                inputObject={inputObject}
+                originalTransformations={fieldTransformations}
+                onTransformationsChange={handleTransformationsChange}
+              />
+            </div>
+
+            {/* Target Fields */}
+            <div className="bg-white p-6 rounded-lg shadow-md">
+              <h2 className="text-2xl font-semibold mb-4">Target Fields</h2>
+              <TargetField originalMappedFields={mappings} onMappingChange={handleMappingChange} />
+            </div>
           </div>
 
-          {/* Transformation Zone */}
-          <div className="bg-white p-6 rounded-lg shadow-md">
-            <h2 className="text-2xl font-semibold mb-4">Data Transformations</h2>
-            <TransformationZone
-              inputObject={inputObject}
-              originalTransformations={fieldTransformations}
-              onTransformationsChange={handleTransformationsChange}
-            />
+          {/* Output Object Section */}
+          <div className="mt-6 bg-white p-6 rounded-lg shadow-md">
+            <h2 className="text-xl font-semibold mb-4">Output Object:</h2>
+            <pre className="bg-gray-100 p-4 rounded-lg overflow-x-auto">
+              {JSON.stringify(outputObject, null, 2)}
+            </pre>
           </div>
-
-          {/* Target Fields */}
-          <div className="bg-white p-6 rounded-lg shadow-md">
-            <h2 className="text-2xl font-semibold mb-4">Target Fields</h2>
-            <TargetField originalMappedFields={mappings} onMappingChange={handleMappingChange} />
+          {/* Save Mappings and Transformations */}
+          <div className="mt-6 bg-white p-6 rounded-lg shadow-md">
+            <h2 className="text-xl font-semibold mb-4">Save Configuration</h2>
+            <div className='flex flex-row'>
+              <input className='pr-4 w-2/5 gap-1 mr-2 p-2 border border-gray-300 rounded' type="text" placeholder="Enter the name of the configuration" onChange={(e) => setConfigurationName(e.target.value)} />
+              <button className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600" onClick={handleSaveClick}>
+                Save Mappings and Transformations
+              </button>
+            </div>
           </div>
         </div>
-
-        {/* Output Object Section */}
-        <div className="mt-6 bg-white p-6 rounded-lg shadow-md">
-          <h2 className="text-xl font-semibold mb-4">Output Object:</h2>
-          <pre className="bg-gray-100 p-4 rounded-lg overflow-x-auto">
-            {JSON.stringify(outputObject, null, 2)}
-          </pre>
-        </div>
-        {/* Save Mappings and Transformations */}
-        <div className="mt-6 bg-white p-6 rounded-lg shadow-md">
-          <h2 className="text-xl font-semibold mb-4">Save Configuration</h2>
-          <div className='flex flex-row'>
-            <input className='pr-4 w-2/5 gap-1 mr-2 p-2 border border-gray-300 rounded' type="text" placeholder="Enter the name of the configuration" onChange={(e) => setConfigurationName(e.target.value)} />
-            <button className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600" onClick={handleSaveClick}>
-              Save Mappings and Transformations
-            </button>
-          </div>
+      </DndProvider>
+      </div>
+      {/* Workflow Editor */}
+      <div className={`${activeTab === TABS.WORKFLOW ? 'block' : 'hidden'} opacity-90 transition-opacity duration-300`}>
+        <div className="container mx-auto p-6 border-teal-950 ">
+          {/* <h1 className="text-4xl font-bold text-center mb-6">Workflow Editor</h1> */}
+          <WorkflowChaining />
         </div>
       </div>
-    </DndProvider>
+    </div>
   );
 };
 
