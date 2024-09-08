@@ -11,6 +11,7 @@ const App = () => {
   const [inputObject, setInputObject] = useState({});
   const [mappings, setMappings] = useState({});
   const [outputObject, setOutputObject] = useState({});
+  const [configurationName, setConfigurationName] = useState('');
   const [fieldTransformations, setFieldTransformations] = useState({});
   const [transformationOptions, setTransformationOptions] = useState({});
 
@@ -60,9 +61,6 @@ const App = () => {
     setMappings(updatedMappings);
   };
 
-  useEffect(() => {
-    reRenderOutputObject();
-  }, [mappings, fieldTransformations]);
 
   const handleTransformationsChange = (fieldTransformations, transformationOptions) => {
     setFieldTransformations(fieldTransformations);
@@ -72,11 +70,42 @@ const App = () => {
     reRenderOutputObject();
   };
 
+  const saveConfiguration = (configurationName) => {
+    const existingConfigurations = JSON.parse(localStorage.getItem('mappingConfiguration')) || {};
+    localStorage.setItem(
+      'mappingConfiguration',
+      JSON.stringify({
+        ...existingConfigurations,
+        [configurationName]: { mappings, fieldTransformations },
+      })
+    );
+    updateSavedList();
+  };
+
+  const handleSaveClick = () => {
+    if (configurationName.trim()) {
+      saveConfiguration(configurationName);
+      alert('Configuration saved successfully!');
+    } else {
+      alert('Please enter a configuration name.');
+    }
+  };
+
+  useEffect(() => {
+    reRenderOutputObject();
+  }, [mappings, fieldTransformations]);
+
+  // Refresh configurations on save
+  const updateSavedList = () => {
+    const savedConfigurations = JSON.parse(localStorage.getItem('mappingConfiguration') || '{}');
+    setMappings(savedConfigurations[configurationName]?.mappings || {});
+    setFieldTransformations(savedConfigurations[configurationName]?.fieldTransformations || {});
+  };
+
   return (
     <DndProvider backend={HTML5Backend}>
       <div className="container mx-auto p-6">
         <h1 className="text-4xl font-bold text-center mb-6">JSON Mapping Editor</h1>
-
         {/* Object Manager Section */}
         <div className="mb-6">
           <div className="bg-white p-6 rounded-lg shadow-md">
@@ -84,7 +113,29 @@ const App = () => {
             <ObjectManager onObjectChange={setInputObject} />
           </div>
         </div>
-
+        {/* Configuration List */}
+        <div className="bg-white p-6 rounded-lg shadow-md mb-6">
+          <h2 className="text-2xl font-semibold mb-4">Load Saved Configurations</h2>
+          <ul className='flex flew-col mr-3'>
+            {Object.keys(JSON.parse(localStorage.getItem('mappingConfiguration') || '{}')).map((configName) => (
+              <li key={configName} className="mr-2">
+                <button
+                  className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                  onClick={() => {
+                    const { mappings: savedMappings, fieldTransformations: savedTransformations } = JSON.parse(
+                      localStorage.getItem('mappingConfiguration')
+                    )[configName];
+                    setConfigurationName(configName);
+                    setMappings(savedMappings);
+                    setFieldTransformations(savedTransformations);
+                  }}
+                >
+                  {configName}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
         {/* Main Transformation Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Source Fields */}
@@ -100,7 +151,7 @@ const App = () => {
             <h2 className="text-2xl font-semibold mb-4">Data Transformations</h2>
             <TransformationZone
               inputObject={inputObject}
-              mappings={mappings}
+              originalTransformations={fieldTransformations}
               onTransformationsChange={handleTransformationsChange}
             />
           </div>
@@ -108,7 +159,7 @@ const App = () => {
           {/* Target Fields */}
           <div className="bg-white p-6 rounded-lg shadow-md">
             <h2 className="text-2xl font-semibold mb-4">Target Fields</h2>
-            <TargetField onMappingChange={handleMappingChange} />
+            <TargetField originalMappedFields={mappings} onMappingChange={handleMappingChange} />
           </div>
         </div>
 
@@ -118,6 +169,16 @@ const App = () => {
           <pre className="bg-gray-100 p-4 rounded-lg overflow-x-auto">
             {JSON.stringify(outputObject, null, 2)}
           </pre>
+        </div>
+        {/* Save Mappings and Transformations */}
+        <div className="mt-6 bg-white p-6 rounded-lg shadow-md">
+          <h2 className="text-xl font-semibold mb-4">Save Configuration</h2>
+          <div className='flex flex-row'>
+            <input className='pr-4 w-2/5 gap-1 mr-2 p-2 border border-gray-300 rounded' type="text" placeholder="Enter the name of the configuration" onChange={(e) => setConfigurationName(e.target.value)} />
+            <button className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600" onClick={handleSaveClick}>
+              Save Mappings and Transformations
+            </button>
+          </div>
         </div>
       </div>
     </DndProvider>

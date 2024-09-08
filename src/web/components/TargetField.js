@@ -3,11 +3,11 @@ import { useDrop } from 'react-dnd';
 import { ItemTypes } from './ItemTypes';
 import Modal from './Modal';
 
-const TargetField = ({ onMappingChange }) => {
+const TargetField = ({ originalMappedFields, onMappingChange }) => {
     const [mappedFields, setMappedFields] = useState({});
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [currentItem, setCurrentItem] = useState(null);
-
+    
     const [{ isOver }, drop] = useDrop(() => ({
         accept: ItemTypes.FIELD,
         drop: (item) => handleDrop(item),
@@ -28,18 +28,20 @@ const TargetField = ({ onMappingChange }) => {
                 onMappingChange(updatedMappings); // Call with updated mappings
                 return updatedMappings;
             });
-        }
+        };
         setIsModalOpen(false); // Close modal after submit
     };
 
     const handleRemoveMapping = (key) => {
-        setMappedFields((prev) => {
-            const updatedMappings = { ...prev };
-            delete updatedMappings[key];
-            onMappingChange(updatedMappings); // Call with updated mappings
-            return updatedMappings;
-        });
+        const updatedMappings = { ...mappedFields };
+        delete updatedMappings[key];
+        onMappingChange(updatedMappings); // Call with updated mappings
     };
+
+    // load the initial mappings
+    React.useEffect(() => {
+        setMappedFields(originalMappedFields);
+    }, [originalMappedFields]);
 
     return (
         <div

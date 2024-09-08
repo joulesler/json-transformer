@@ -3,7 +3,7 @@ import loadTransformations from '../../lib/transform';
 
 const transformationOptions = loadTransformations();
 
-const TransformationZone = ({ inputObject, onTransformationsChange }) => {
+const TransformationZone = ({ originalTransformations, inputObject, onTransformationsChange }) => {
     const [fieldTransformations, setFieldTransformations] = useState({});
     const [selectedTransformation, setSelectedTransformation] = useState({});
 
@@ -63,6 +63,11 @@ const TransformationZone = ({ inputObject, onTransformationsChange }) => {
         }
     }, [fieldTransformations, inputObject]);
 
+    // Load the initial transformations
+    useEffect(() => {
+        setFieldTransformations(originalTransformations);
+    }, [originalTransformations]);
+    
     return (
         <div className="p-5 border-2 border-dashed border-gray-400 bg-white min-h-[150px]">
             {Object.keys(inputObject).map((key) => (
