@@ -10,7 +10,6 @@ In the project directory, you can run:
 ![image](https://github.com/user-attachments/assets/d709068f-d001-41c6-99a8-2a0e0ab6e872)
 
 Order and re-order transformations, to match the desired outcomes
-![image](https://github.com/user-attachments/assets/690735d5-8440-43a2-8810-721c071e12bd)
 
 Add additional plugins where needed
 ![image](https://github.com/user-attachments/assets/8795d138-3a04-4305-9ebd-c9651b977828)
