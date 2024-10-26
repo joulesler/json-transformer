@@ -6,7 +6,7 @@
 In the project directory, you can run:
 ### `npm start`
 
-# Create JSON transformations for tranformations
+# Create JSON transformations for input objects, to create a desired mapping
 ![image](https://github.com/user-attachments/assets/d709068f-d001-41c6-99a8-2a0e0ab6e872)
 
 Order and re-order transformations, to match the desired outcomes
